@@ -6,22 +6,29 @@ use std::process;
 const BUFFER_SIZE: usize = 2048;
 
 fn main() {
-   let args: Vec<String> = env::args().collect(); 
+    let args: Vec<String> = env::args().collect(); 
     if args.len() < 2 {
-        io::stderr().write(&format!("{}: file name not given\n", args[0]).into_bytes());
-        process::exit(1);
-    }
-    for arg in &args[1..] {
-        do_cat(arg).unwrap_or_else(die);
+        do_cat(None);
+    } else {
+        for arg in &args[1..] {
+            do_cat(Some(arg)).unwrap_or_else(die);
+        }
     }
     process::exit(0);
 }
 
-fn do_cat(path: &str) -> io::Result<()> {
+fn do_cat(path: Option<&str>) -> io::Result<()> {
     let mut buf: [u8; BUFFER_SIZE] = [0; BUFFER_SIZE];
-    let mut f = File::open(path)?;
+    let mut s: Box<Read>;
+
+    if let Some(path) = path {
+        s = Box::new(File::open(path)?);
+    } else {
+        s = Box::new(io::stdin());
+    }
+
     loop {
-        let n = f.read(&mut buf)?;
+        let n = s.read(&mut buf)?;
         if n == 0 {
             break;
         }

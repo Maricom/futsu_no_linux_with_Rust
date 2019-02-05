@@ -12,7 +12,7 @@ fn main() {
         process::exit(1);
     }
     for arg in &args[1..] {
-        do_cat(arg);
+        do_cat(arg).unwrap_or_else(die);
     }
     process::exit(0);
 }
@@ -28,4 +28,9 @@ fn do_cat(path: &str) -> io::Result<()> {
         io::stdout().write(&buf[..n])?;
     }
     Ok(())
+}
+
+fn die(e: io::Error) {
+    io::stderr().write(&format!("{}\n", e).into_bytes());
+    process::exit(1);
 }

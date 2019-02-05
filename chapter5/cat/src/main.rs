@@ -11,7 +11,7 @@ fn main() {
         io::stderr().write(&format!("{}: file name not given\n", args[0]).into_bytes());
         process::exit(1);
     }
-    for arg in &args {
+    for arg in &args[1..] {
         do_cat(arg);
     }
     process::exit(0);

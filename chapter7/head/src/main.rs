@@ -11,7 +11,7 @@ fn main() {
     let mut start_idx = 1;
     let mut opts = Options::new();
 
-    opts.optopt("n", "lines", "set the number of lines", "NLINES");
+    opts.optflag("n", "lines", "set the number of lines");
     opts.optflag("h", "help", "print this help menu");
 
     let matches = match opts.parse(&args[1..]) {

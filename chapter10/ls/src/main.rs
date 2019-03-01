@@ -25,6 +25,7 @@ fn main() {
     }
 
     for arg in &args[start_idx..] {
+        println!("{}", arg);
         do_ls(Path::new(arg), 0, r_flag);
     }
 }

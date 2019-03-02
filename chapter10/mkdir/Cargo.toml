@@ -5,3 +5,4 @@ authors = ["Maricom <akita447@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+getopts = "0.2"

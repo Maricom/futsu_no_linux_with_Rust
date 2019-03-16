@@ -1,6 +1,7 @@
 use std::io::{stdin, stdout, Write};
+use std::fs::File;
 use std::ffi::CString;
-use std::os::unix::io::RawFd;
+use std::os::unix::io::{RawFd, IntoRawFd};
 
 use nix::unistd::{close, pipe, dup2, fork, ForkResult, execv};
 use nix::sys::wait::waitpid;
@@ -11,7 +12,20 @@ fn main() {
 
     print_dollar();
     while let Ok(_) = stdin.read_line(&mut buf) {
-        let commands: Vec<&str> = buf.split('|').collect(); 
+        let mut tmp = buf.split(" > ");
+        let commands: Vec<&str> = tmp.next().unwrap().split('|').collect(); 
+        let mut redirect = None;
+
+        if let Some(rd) = tmp.next() {
+            let rd = rd.split_whitespace().next().unwrap();
+            match File::create(rd) {
+                Ok(f) => redirect = Some(f.into_raw_fd()),
+                Err(e) => {
+                    println!("{}", e);
+                    continue;
+                },
+            }
+        }
         
         let mut pids = Vec::new();
         let mut fds = Vec::new();
@@ -23,7 +37,7 @@ fn main() {
             let args: Vec<CString> = commands[i].split_whitespace()
                 .map(|s| CString::new(s).unwrap())
                 .collect();
-
+            
             match fork() {
                 Ok(ForkResult::Child) => {
                     if i > 0 {
@@ -36,6 +50,13 @@ fn main() {
                         dup2(fds[i].1, 1); 
                     }
                     
+                    if i == commands.len()-1 {
+                        if let Some(rd) = redirect {
+                            close(1).unwrap();
+                            dup2(rd, 1);
+                        }
+                    }
+
                     close_fds(fds);
 
                     if let Err(e) = execv(&args[0], &args) {
